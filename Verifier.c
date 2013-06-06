@@ -123,6 +123,8 @@ static short branch_offset(method_info *mi, OpcodeDescription op, uint32_t p) {
 static node *init_dict(method_state *ms);
 static method_state *create_method_state(uint32_t bytecode_position, uint8_t change_bit, uint16_t stack_height, char **typecode_list);
 static method_state *find_set_change_bit(node *root);
+static method_state *get_method_state(node *root, uint32_t position);
+static void insert_method_state(node *root, method_state *ms);
 
 
 // Verify the bytecode of one method m from class file cf
@@ -150,6 +152,29 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
 
         OpcodeDescription op = opcodes[opcode]; 
         ParseOpSignature(op, curr_ms, m);
+
+        short branch_off;
+        method_state *ms;
+        if((branch_off = branch_offset(m,op,p)) != NULL) {
+            if((ms = get_method_state(D,p+branch_off)) != NULL) {
+                if(!merge(ms, numSlots, h, t)) {
+                    printf("Path merge failed");
+                    exit(0);
+                }
+            }
+            else {
+                insert_method_state(D,create_method_state(p+branch_off, 1, h, t));
+            }
+        }
+        if((ms = get_method_state(D,p+next_op_offset(op)) != NULL)) {
+            if(!merge(ms, numSlots, h, t)) {
+                printf("Path merge failed");
+                exit(0);
+            }
+        }
+        else {
+            insert_method_state(D,create_method_state(p+next_op_offset(op),1,h,t));
+        }
     }
 
     /* Verification rules that need to be implemented:
