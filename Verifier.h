@@ -1,4 +1,10 @@
-/* Verify.h */
+/*
+ * Verifier.h
+ * Braden Simpson (V00685500)
+ * Jordan Ell (V00660306)
+ * University of Victoria, CSC586A
+ * Virtual Machines
+ */
 
 #ifndef VERIFYH
 #define VERIFYH

@@ -1,4 +1,10 @@
-/* Verifier.c */
+/* 
+ * Verifier.c 
+ * Braden Simpson (V00685500)
+ * Jordan Ell (V00660306)
+ * University of Victoria, CSC586A
+ * Virtual Machines
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -41,7 +47,7 @@ static bool safe_pop(method_state *ms, method_info *mi, char* val) {
     if(ms->stack_height < 0)
         return false;
     char* pop = ms->typecode_list[mi->max_locals+ms->stack_height];
-    if(strcmp(val, pop) == 0 || strcmp(val, "X"))
+    if(strcmp(val, pop) == 0 || strcmp(val, "X") == 0)
         return true;
     return false;
 }
@@ -153,6 +159,11 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
         OpcodeDescription op = opcodes[opcode]; 
         ParseOpSignature(op, curr_ms, m);
 
+        // if (strcmp(op.inlineOperands, "") != 0) {
+        //     // There are inline operands.  Check their indices
+            
+        // }   
+
         short branch_off;
         method_state *ms;
         if((branch_off = branch_offset(m,op,p)) != NULL) {
@@ -191,8 +202,6 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
      *   on the stack must have types which are compatible with OP
      */
 
-     // Implement verification here.
-
     FreeTypeDescriptorArray(initState, numSlots);
     SafeFree(name);
 }
@@ -201,25 +210,29 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
     char* sig = op.signature;
     bool isPopping = true;
     int i;
-    
+    char* str;
     if (tracingExecution & TRACE_VERIFY)
         printf("Parsing Opcode %s Signature: %s\n", op.opcodeName, sig);
     
-    for (i = 0;i < strlen(sig) - 1;i++) {
+    for (i = 0;i < strlen(sig);i++) {
         if (isPopping){
             switch(sig[i]) {
                 case '>': 
                     isPopping = false;
                     break;
                 default:
-                    pop_die(ms, mi, &(sig[i]));
+                    str = (char*)malloc(1);
+                    str = strncpy(str, sig + i, 1);
+                    pop_die(ms, mi, str);
                     break;
             }
         }
         else {
             switch(sig[i]) {
                 default:
-                    push_die(ms, mi, &(sig[i]));
+                    str = (char*)malloc(1);
+                    str = strncpy(str, sig + i, 1);
+                    push_die(ms, mi, str);
                     break;
             }
         }
