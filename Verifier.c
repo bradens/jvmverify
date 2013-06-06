@@ -13,7 +13,6 @@
 #include "Verifier.h"
 
 
-
 // Output an array of the verifier's type descriptors
 static void printTypeCodesArray( char **vstate, method_info *m, char *name ) {
     int i;
@@ -41,6 +40,27 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
 
     if (tracingExecution & TRACE_VERIFY)
     	printTypeCodesArray(initState, m, name);
+
+    // Dict *D = init_dict();
+    // Dict *first = D; 
+
+    while (D->next != NULL) {
+        if ((D->method_state->change_bit) == 0)
+            continue;
+        
+        D->method_state->change_bit = 0;
+        uint32_t bytecode_pos = D->method_state->bytecode_pos;
+        uint32_t stack_height = D->method_state->stack_height;
+        char** typecode_list = D->method_state->typecode_list;
+        uint8_t op = m->code[p]
+        
+        // get the inline operands from the opcode
+        char* operands = 
+    }
+
+
+    
+
 
     /* Verification rules that need to be implemented:
      *   1. No matter what execution path is followed to reach a point P in the bytecode

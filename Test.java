@@ -1,6 +1,6 @@
 public class Test {
-	float x;
-	public float returnX() {
-		return x;
+	public static int returnX() {
+		int x = 1;
+		return x + 309;
 	}
 }
