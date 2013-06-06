@@ -17,6 +17,10 @@ typedef struct {
 	struct node  *next;
 } node;
 
+void push_die(method_state*, method_info*, char*);
+void pop_die(method_state*, method_info*, char*);
+static void ParseOpSignature(OpcodeDescription, method_state*, method_info*);
+
 extern void Verify( ClassFile *cf );
 extern void InitVerifier(void);
 

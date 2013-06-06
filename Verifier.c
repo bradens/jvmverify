@@ -12,6 +12,7 @@
 #include "MyAlloc.h"
 #include "VerifierUtils.h"
 #include "Verifier.h"
+#include "jvm.h"
 
 // Output an array of the verifier's type descriptors
 static void printTypeCodesArray( char **vstate, method_info *m, char *name ) {
@@ -89,7 +90,7 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
     char *name = GetCPItemAsString(cf, m->name_index);
     char *retType;
     int numSlots = m->max_locals + m->max_stack;
-
+    
     // initState is an array of strings, it has numSlots elements
     // retType describes the result type of this method
     char **initState = MapSigToInitState(cf, m, &retType);
@@ -99,17 +100,30 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
 
     node *D = init_dict(create_method_state(0,1,0,initState));
     method_state *curr_ms;
-    node *first = D; 
 
     while ((curr_ms = find_set_change_bit(D)) != NULL) {
         curr_ms->change_bit = 0;
         uint32_t p = curr_ms->bytecode_position;
         uint32_t h = curr_ms->stack_height;
         char** t   = curr_ms->typecode_list;
-        uint8_t op = m->code[p];
-        
-        // get the inline operands from the opcode
-        //char* operands = 
+        uint8_t opcode = m->code[p++];
+
+        OpcodeDescription op = opcodes[opcode]; 
+        ParseOpSignature(op, curr_ms, m);
+        // switch(op) {
+        // case OP_fload:
+        //     safe_push(curr_ms, m, "F");
+        // case OP_dload:
+        //     safe_push(curr_ms, m, "D");
+        //     safe_push(curr_ms, m, "d");
+        // case OP_lload:
+        //     safe_push(curr_ms, m, "L");
+        //     safe_push(curr_ms, m, "l");
+        // case OP_iload:
+        //     safe_push(curr_ms, m, "I");
+        // case OP_aload:
+        //     safe_push(curr_ms, m, "A");
+        // }
     }
 
     /* Verification rules that need to be implemented:
@@ -130,6 +144,61 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
 
     FreeTypeDescriptorArray(initState, numSlots);
     SafeFree(name);
+}
+
+static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info* mi) {
+    char* sig = op.signature;
+    bool isPopping = true;
+
+    for (int i = 0;i < strlen(sig);i++) {
+        if (isPopping){
+            switch(sig[i]) {
+                case '>': 
+                    isPopping = false;
+                    break;
+                case '-': 
+                    printf("FAILURE: Popped an empty stack slot.\n");
+                    exit(0);
+                case 'U': 
+                    printf("FAILURE: Popped an uninitialized value.\n");
+                    exit(0);
+                case 'X': 
+                    
+                case 'I':
+                case 'L':
+                case 'l':
+                case 'D':
+                case 'd':
+                case 'F':
+                case 'N': 
+                    pop_die(ms, mi, &(sig[i]));
+                    break;
+            }
+        }
+        else {
+            switch(sig[i]) {
+                case 'I': 
+                    push_die(ms, mi, &(sig[i]));
+
+            }
+            // isPushing
+        }
+    }
+}
+void push_die(method_state* ms, method_info* mi, char* val) {
+    printf("pushing %s\n", val);
+    if (!safe_push(ms, mi, val)) {
+        printf("Stack push expected %s", val);
+        exit(0);
+    }
+}
+
+void pop_die(method_state* ms, method_info* mi, char* val) {
+    printf("popping %s\n", val);
+    if (!safe_pop(ms, mi, val)) {
+        printf("Stack pop expected %s", val);
+        exit(0);
+    }
 }
 
 static node *init_dict(method_state *ms) {
