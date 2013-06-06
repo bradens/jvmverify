@@ -61,6 +61,8 @@ static bool is_reference(char* type) {
 
 static bool merge(method_state *ms, int numSlots, uint32_t h, char** t) {
     int index = 0;
+    if(ms->stack_height != h)
+        return false;
     for(; index < numSlots; index++) {
         if(strcmp(ms->typecode_list[index], t[index]) == 0)
             continue;
@@ -76,8 +78,46 @@ static bool merge(method_state *ms, int numSlots, uint32_t h, char** t) {
             strcmp(ms->typecode_list[index], t[index]) != 0) {
             return false;
         }
+        else if((is_reference(ms->typecode_list[index]) && is_simple_type(t[index])) || 
+            (is_simple_type(ms->typecode_list[index]) && is_reference(t[index])) ) {
+            return false;
+        }
+        else if((is_reference(ms->typecode_list[index]) && (strcmp(t[index],"N") == 0)) || 
+            (is_reference(t[index]) && (strcmp(ms->typecode_list[index],"N") == 0))) {
+            if(strcmp(ms->typecode_list[index],"N") == 0) {
+                ms->change_bit = 1;
+                ms->typecode_list[index] = t[index];
+            }
+        }
+        else if(is_reference(ms->typecode_list[index]) && is_reference(t[index])) {
+            char* lub = LUB(ms->typecode_list[index], t[index]);
+            if(strcmp(ms->typecode_list[index],lub) != 0) {
+                ms->change_bit = 1;
+                ms->typecode_list[index] = lub;
+            }
+        }
     }
     return true;
+}
+
+static int next_op_offset(OpcodeDescription op) {
+    return strlen(op.inlineOperands)+1;
+}
+
+static short branch_offset(method_info *mi, OpcodeDescription op, uint32_t p) {
+    if(strcmp(op.inlineOperands,"bb") == 0) {
+        uint8_t b1 = mi->code[p+1];
+        uint8_t b2 = mi->code[p+2];
+        return (b1 << 8 + b2);
+    }
+    else if(strcmp(op.inlineOperands,"bbbb") == 0) {
+        uint8_t b1 = mi->code[p+1];
+        uint8_t b2 = mi->code[p+2];
+        uint8_t b3 = mi->code[p+3];
+        uint8_t b4 = mi->code[p+4];
+        return (b1 << 24 + b2 << 16 + b3 << 8 + b4);
+    }
+    return NULL;
 }
 
 static node *init_dict(method_state *ms);
@@ -106,7 +146,7 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
         uint32_t p = curr_ms->bytecode_position;
         uint32_t h = curr_ms->stack_height;
         char** t   = curr_ms->typecode_list;
-        uint8_t opcode = m->code[p++];
+        uint8_t opcode = m->code[p];
 
         OpcodeDescription op = opcodes[opcode]; 
         ParseOpSignature(op, curr_ms, m);
