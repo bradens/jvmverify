@@ -27,6 +27,8 @@ static void printTypeCodesArray( char **vstate, method_info *m, char *name ) {
 }
 
 static node *init_dict(method_state *ms);
+static method_state *create_method_state(uint32_t bytecode_position, uint8_t change_bit, uint16_t stack_height, char **typecode_list);
+static method_state *find_set_change_bit(node *root);
 
 
 // Verify the bytecode of one method m from class file cf
@@ -42,21 +44,19 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
     if (tracingExecution & TRACE_VERIFY)
     	printTypeCodesArray(initState, m, name);
 
-    node *D = init_dict();
+    node *D = init_dict(create_method_state(0,1,numSlots,initState));
+    method_state *curr_ms;
     node *first = D; 
 
-    while (D->next != NULL) {
-        if ((D->method_state->change_bit) == 0)
-            continue;
-        
-        D->method_state->change_bit = 0;
-        uint32_t bytecode_pos = D->method_state->bytecode_pos;
-        uint32_t stack_height = D->method_state->stack_height;
-        char** typecode_list = D->method_state->typecode_list;
-        uint8_t op = m->code[p]
+    while ((curr_ms = find_set_change_bit(D)) != NULL) {
+        curr_ms->change_bit = 0;
+        uint32_t p = curr_ms->bytecode_position;
+        uint32_t h = curr_ms->stack_height;
+        char** t   = curr_ms->typecode_list;
+        uint8_t op = m->code[p];
         
         // get the inline operands from the opcode
-        char* operands = 
+        //char* operands = 
     }
 
     /* Verification rules that need to be implemented:
@@ -106,6 +106,15 @@ static void insert_method_state(node *root, method_state *ms) {
         break;
     }
   }
+}
+
+static method_state *find_set_change_bit(node *root) {
+  node *np;
+  for(np = root; np != NULL; np = np->next) {
+    if(np->ms->change_bit == 1)
+        return np->ms;
+  }
+  return NULL;
 }
 
 static method_state *create_method_state(uint32_t bytecode_position, uint8_t change_bit, uint16_t stack_height, char **typecode_list) {
