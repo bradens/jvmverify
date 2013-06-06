@@ -176,7 +176,10 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
     char* sig = op.signature;
     bool isPopping = true;
     int i;
-    printf("%s\n", sig);
+    
+    if (tracingExecution & TRACE_VERIFY)
+        printf("Parsing Opcode %s Signature: %s\n", op.opcodeName, sig);
+    
     for (i = 0;i < strlen(sig) - 1;i++) {
         if (isPopping){
             switch(sig[i]) {
@@ -198,7 +201,8 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
     }
 }
 void push_die(method_state* ms, method_info* mi, char* val) {
-    printf("pushing %s\n", val);
+    if (tracingExecution & TRACE_VERIFY)
+        printf("pushing %s\n", val);
     if (!safe_push(ms, mi, val)) {
         printf("Stack push expected %s", val);
         exit(0);
@@ -206,7 +210,8 @@ void push_die(method_state* ms, method_info* mi, char* val) {
 }
 
 void pop_die(method_state* ms, method_info* mi, char* val) {
-    printf("popping %s\n", val);
+    if (tracingExecution & TRACE_VERIFY)
+        printf("popping %s\n", val);
     if (!safe_pop(ms, mi, val)) {
         printf("Stack pop expected %s", val);
         exit(0);
