@@ -45,6 +45,8 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
     // Your code to verify the bytecode of the current method
     // begins here.
 
+    
+    
     // Feel free to define and use as many extra functions as
     // are appropriate for this problem.
 
