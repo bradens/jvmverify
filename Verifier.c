@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #include "ClassFileFormat.h"
 #include "OpcodeSignatures.h"
@@ -27,6 +28,35 @@ static void printTypeCodesArray( char **vstate, method_info *m, char *name ) {
         fprintf(stdout, "  S%d:  %s\n", i, *vstate++);
 }
 
+static uint8_t stack_height(char** state, method_info *mi) {
+    int index = mi->max_locals;
+    int count = 0;
+    for(index; index < mi->max_locals+mi->max_stack; index++) {
+        if(strcmp("-", state[index]) == 0)
+            break;;
+        count++;
+    }
+    return count;
+}
+
+static bool safe_push(method_state *ms, method_info *mi, char* val) {
+    if(ms->stack_height < mi->max_stack) {
+        ms->typecode_list[mi->max_locals+ms->stack_height] = val;
+        return true;
+    }
+    return false;
+}
+
+static char *safe_pop(method_state *ms, method_info *mi) {
+    if(ms->stack_height > 0) {
+        char* val = ms->typecode_list[mi->max_locals+ms->stack_height-1];
+        ms->typecode_list[mi->max_locals+ms->stack_height-1] = "-";
+        ms->stack_height--;
+        return val;
+    }
+    return NULL;
+}
+
 static node *init_dict(method_state *ms);
 static method_state *create_method_state(uint32_t bytecode_position, uint8_t change_bit, uint16_t stack_height, char **typecode_list);
 static method_state *find_set_change_bit(node *root);
@@ -45,7 +75,7 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
     if (tracingExecution & TRACE_VERIFY)
     	printTypeCodesArray(initState, m, name);
 
-    node *D = init_dict(create_method_state(0,1,numSlots,initState));
+    node *D = init_dict(create_method_state(0,1,stack_height(initState, m),initState));
     method_state *curr_ms;
 
     while ((curr_ms = find_set_change_bit(D)) != NULL) {
