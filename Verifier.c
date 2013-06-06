@@ -27,33 +27,22 @@ static void printTypeCodesArray( char **vstate, method_info *m, char *name ) {
         fprintf(stdout, "  S%d:  %s\n", i, *vstate++);
 }
 
-static uint8_t stack_height(char** state, method_info *mi) {
-    int index = mi->max_locals;
-    int count = 0;
-    for(index; index < mi->max_locals+mi->max_stack; index++) {
-        if(strcmp("-", state[index]) == 0)
-            break;;
-        count++;
-    }
-    return count;
-}
-
 static bool safe_push(method_state *ms, method_info *mi, char* val) {
-    if(ms->stack_height < mi->max_stack) {
-        ms->typecode_list[mi->max_locals+ms->stack_height] = val;
-        return true;
-    }
-    return false;
+    ms->stack_height++;
+    if(ms->stack_height > mi->max_stack)
+        return false;
+    ms->typecode_list[mi->max_locals+ms->stack_height-1] = val;
+    return true;
 }
 
-static char *safe_pop(method_state *ms, method_info *mi) {
-    if(ms->stack_height > 0) {
-        char* val = ms->typecode_list[mi->max_locals+ms->stack_height-1];
-        ms->typecode_list[mi->max_locals+ms->stack_height-1] = "-";
-        ms->stack_height--;
-        return val;
-    }
-    return NULL;
+static bool safe_pop(method_state *ms, method_info *mi, char* val) {
+    ms->stack_height--;
+    if(ms->stack_height < 0)
+        return false;
+    char* pop = ms->typecode_list[mi->max_locals+stack_height];
+    if(strcmp(val, pop) == 0)
+        return true;
+    return false;
 }
 
 static node *init_dict(method_state *ms);
@@ -74,7 +63,7 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
     if (tracingExecution & TRACE_VERIFY)
     	printTypeCodesArray(initState, m, name);
 
-    node *D = init_dict(create_method_state(0,1,stack_height(initState, m),initState));
+    node *D = init_dict(create_method_state(0,1,0,initState));
     method_state *curr_ms;
     node *first = D; 
 
