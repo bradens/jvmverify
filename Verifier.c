@@ -42,15 +42,21 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
     if (tracingExecution & TRACE_VERIFY)
     	printTypeCodesArray(initState, m, name);
 
-    // Your code to verify the bytecode of the current method
-    // begins here.
+    /* Verification rules that need to be implemented:
+     *   1. No matter what execution path is followed to reach a point P in the bytecode
+     *   the height of the stack will be the same at P for all these paths.
+     *   2. The height of the stack will never exceed the number determined by the Java compiler
+     *   Note: see the max_stack field in the method_info struct for a method
+     *   3. The stack will never underflow 
+     *   4. When the value of a local variable is used at point P in the bytecode, 
+     *   that local variable should have been assigned a value on all paths which reach P.
+     *   5. When a value is stored into a field F of a class, the value must be compatible with
+     *   the type of F
+     *   6. When an opcode OP at point P in the bytecode is executed, any operands for OP
+     *   on the stack must have types which are compatible with OP
+     */
 
-    // Feel free to define and use as many extra functions as
-    // are appropriate for this problem.
-
-    // Do include tracing output statements in your code
-    // controlled by the tracingExecution variable to help
-    // you debug the verification algorithm.
+     // Implement verification here.
 
     FreeTypeDescriptorArray(initState, numSlots);
     SafeFree(name);
