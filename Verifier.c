@@ -115,12 +115,14 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
 static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info* mi) {
     char* sig = op.signature;
     bool isPopping = true;
-
-    for (int i = 0;i < strlen(sig);i++) {
+    printf("parsing %s", sig);
+    int i;
+    for (i = 0;i < strlen(sig);i++) {
         if (isPopping){
             switch(sig[i]) {
                 case '>': 
                     isPopping = false;
+                    
                     break;
                 case '-': 
                     printf("FAILURE: Popped an empty stack slot.\n");
@@ -128,26 +130,21 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
                 case 'U': 
                     printf("FAILURE: Popped an uninitialized value.\n");
                     exit(0);
-                case 'X': 
-                    
-                case 'I':
-                case 'L':
-                case 'l':
-                case 'D':
-                case 'd':
-                case 'F':
-                case 'N': 
+                default:
                     pop_die(ms, mi, &(sig[i]));
                     break;
             }
         }
         else {
             switch(sig[i]) {
-                case 'I': 
+                case 'A': 
+                    push_die(ms, mi, sig);
+                    break;
+                default:
                     push_die(ms, mi, &(sig[i]));
+                    break;
 
             }
-            // isPushing
         }
     }
 }
