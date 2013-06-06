@@ -44,7 +44,7 @@ static bool safe_push(method_state *ms, method_info *mi, char* val) {
 
 static bool safe_pop(method_state *ms, method_info *mi, char* val) {
     ms->stack_height--;
-    if(ms->stack_height < 0)
+    if(ms->stack_height < 0 || ms->stack_height > mi->max_stack)
         return false;
     char* pop = ms->typecode_list[mi->max_locals+ms->stack_height];
     if(strcmp(val, pop) == 0 || strcmp(val, "X") == 0)
@@ -152,7 +152,6 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
     while ((curr_ms = find_set_change_bit(D)) != NULL) {
         curr_ms->change_bit = 0;
         uint32_t p = curr_ms->bytecode_position;
-        uint32_t h = curr_ms->stack_height;
         char** t   = curr_ms->typecode_list;
         uint8_t opcode = m->code[p];
 
@@ -168,23 +167,23 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
         method_state *ms;
         if((branch_off = branch_offset(m,op,p)) != NULL) {
             if((ms = get_method_state(D,p+branch_off)) != NULL) {
-                if(!merge(ms, numSlots, h, t)) {
+                if(!merge(ms, numSlots, curr_ms->stack_height, t)) {
                     printf("Path merge failed");
                     exit(0);
                 }
             }
             else {
-                insert_method_state(D,create_method_state(p+branch_off, 1, h, t));
+                insert_method_state(D,create_method_state(p+branch_off, 1, curr_ms->stack_height, t));
             }
         }
         if((ms = get_method_state(D,p+next_op_offset(op)) != NULL)) {
-            if(!merge(ms, numSlots, h, t)) {
+            if(!merge(ms, numSlots, curr_ms->stack_height, t)) {
                 printf("Path merge failed");
                 exit(0);
             }
         }
         else {
-            insert_method_state(D,create_method_state(p+next_op_offset(op),1,h,t));
+            insert_method_state(D,create_method_state(p+next_op_offset(op),1,curr_ms->stack_height,t));
         }
     }
 
