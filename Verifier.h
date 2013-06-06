@@ -4,6 +4,7 @@
 #define VERIFYH
 
 #include "ClassFileFormat.h"  // for ClassFile
+#include "OpcodeSignatures.h"
 
 typedef struct {
   uint32_t  bytecode_position;
@@ -19,7 +20,7 @@ typedef struct {
 
 void push_die(method_state*, method_info*, char*);
 void pop_die(method_state*, method_info*, char*);
-static void ParseOpSignature(OpcodeDescription, method_state*, method_info*);
+static void ParseOpSignature(OpcodeDescription op, method_state*, method_info*);
 
 extern void Verify( ClassFile *cf );
 extern void InitVerifier(void);

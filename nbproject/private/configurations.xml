@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="88">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df root="." name="jvmverify">
+      <in>ClassFileFormat.c</in>
+      <in>ClassFileFormat.h</in>
+      <in>ClassResolver.c</in>
+      <in>ClassResolver.h</in>
+      <in>InterpretLoop.c</in>
+      <in>InterpretLoop.h</in>
+      <in>MyAlloc.c</in>
+      <in>MyAlloc.h</in>
+      <in>NativeClasses.c</in>
+      <in>NativeClasses.h</in>
+      <in>OpcodeSignatures.c</in>
+      <in>OpcodeSignatures.h</in>
+      <in>PrintByteCode.c</in>
+      <in>PrintByteCode.h</in>
+      <in>PrintClassFile.c</in>
+      <in>PrintClassFile.h</in>
+      <in>ReadClassFile.c</in>
+      <in>ReadClassFile.h</in>
+      <in>StringBuilder.c</in>
+      <in>StringBuilder.h</in>
+      <in>TraceOptions.c</in>
+      <in>TraceOptions.h</in>
+      <in>Verifier.c</in>
+      <in>Verifier.h</in>
+      <in>VerifierUtils.c</in>
+      <in>VerifierUtils.h</in>
+      <in>jvm.c</in>
+      <in>jvm.h</in>
+      <in>main.c</in>
+    </df>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <platform>2</platform>
+      </toolsSet>
+      <dbx_gdbdebugger version="1">
+        <gdb_pathmaps>
+        </gdb_pathmaps>
+        <gdb_interceptlist>
+          <gdbinterceptoptions gdb_all="false" gdb_unhandled="true" gdb_unexpected="true"/>
+        </gdb_interceptlist>
+        <gdb_options>
+          <DebugOptions>
+          </DebugOptions>
+        </gdb_options>
+        <gdb_buildfirst gdb_buildfirst_overriden="false" gdb_buildfirst_old="false"/>
+      </dbx_gdbdebugger>
+      <nativedebugger version="1">
+        <engine>gdb</engine>
+      </nativedebugger>
+      <runprofile version="9">
+        <runcommandpicklist>
+          <runcommandpicklistitem>"${OUTPUT_PATH}"</runcommandpicklistitem>
+          <runcommandpicklistitem>"${OUTPUT_PATH}" -T -D Test</runcommandpicklistitem>
+        </runcommandpicklist>
+        <runcommand>"${OUTPUT_PATH}" -T -D Test</runcommand>
+        <rundir>.</rundir>
+        <buildfirst>false</buildfirst>
+        <terminal-type>0</terminal-type>
+        <remove-instrumentation>0</remove-instrumentation>
+        <environment>
+        </environment>
+      </runprofile>
+    </conf>
+  </confs>
+</configurationDescriptor>
