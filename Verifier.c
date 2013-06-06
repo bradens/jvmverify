@@ -12,8 +12,6 @@
 #include "VerifierUtils.h"
 #include "Verifier.h"
 
-
-
 // Output an array of the verifier's type descriptors
 static void printTypeCodesArray( char **vstate, method_info *m, char *name ) {
     int i;
@@ -28,6 +26,8 @@ static void printTypeCodesArray( char **vstate, method_info *m, char *name ) {
         fprintf(stdout, "  S%d:  %s\n", i, *vstate++);
 }
 
+static node *init_dict(method_state *ms);
+
 
 // Verify the bytecode of one method m from class file cf
 static void verifyMethod( ClassFile *cf, method_info *m ) {
@@ -41,6 +41,8 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
 
     if (tracingExecution & TRACE_VERIFY)
     	printTypeCodesArray(initState, m, name);
+
+    //node *dict = init_dict(NULL);
 
     /* Verification rules that need to be implemented:
      *   1. No matter what execution path is followed to reach a point P in the bytecode
@@ -61,6 +63,45 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
     FreeTypeDescriptorArray(initState, numSlots);
     SafeFree(name);
 }
+
+static node *init_dict(method_state *ms) {
+  node *root = malloc(sizeof(node));
+  root->next = 0;
+  root->ms = ms;
+  return root;
+}
+
+static method_state *get_method_state(node *root, uint32_t position) {
+  node *np;
+  for(np = root; np != NULL; np = np->next) {
+    if(np->ms != NULL && np->ms->bytecode_position == position)
+        return np->ms;
+  }
+  return NULL;
+}
+
+static void insert_method_state(node *root, method_state *ms) {
+  node *np;
+  for(np = root; np != NULL; np = np->next) {
+    if(np->next == NULL) {
+        node *new = malloc(sizeof(node));
+        new->next = 0;
+        new->ms = ms;
+        np->next = new;
+        break;
+    }
+  }
+}
+
+static method_state *create_method_state(uint32_t bytecode_position, uint8_t change_bit, uint16_t stack_height, char **typecode_list) {
+  method_state *ms = malloc(sizeof(method_state));
+  ms->bytecode_position = bytecode_position;
+  ms->change_bit = change_bit;
+  ms->stack_height = stack_height;
+  ms->typecode_list = typecode_list;
+  return ms;
+}
+
 
 
 // Verify the bytecode of all methods in class file cf
