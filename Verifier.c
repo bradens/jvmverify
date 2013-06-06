@@ -39,10 +39,44 @@ static bool safe_pop(method_state *ms, method_info *mi, char* val) {
     ms->stack_height--;
     if(ms->stack_height < 0)
         return false;
-    char* pop = ms->typecode_list[mi->max_locals+stack_height];
+    char* pop = ms->typecode_list[mi->max_locals+ms->stack_height];
     if(strcmp(val, pop) == 0)
         return true;
     return false;
+}
+
+static bool is_simple_type(char* type) {
+    if(strcmp(type,"I") == 0 || strcmp(type,"D") == 0 || strcmp(type,"d") == 0 || strcmp(type,"L") == 0 || 
+        strcmp(type,"l") == 0 || strcmp(type,"F") == 0 )
+        return true;
+    return false;
+}
+
+static bool is_reference(char* type) {
+    size_t lenpre = strlen("A"),
+           lenstr = strlen(type);
+    return lenstr < lenpre ? false : strncmp("A", type, lenpre) == 0;
+}
+
+static bool merge(method_state *ms, int numSlots, uint32_t h, char** t) {
+    int index = 0;
+    for(; index < numSlots; index++) {
+        if(strcmp(ms->typecode_list[index], t[index]) == 0)
+            continue;
+        else if(strcmp(ms->typecode_list[index], "X") == 0 || strcmp(t[index], "X") == 0) {
+            return false;
+        }
+        else if(strcmp(ms->typecode_list[index], "U") == 0 || strcmp(t[index], "U") == 0) {
+            if(strcmp(ms->typecode_list[index], "U") != 0)
+                ms->change_bit = 1;
+            ms->typecode_list[index] = "U";
+        }
+        else if(is_simple_type(ms->typecode_list[index]) && is_simple_type(t[index]) &&
+            strcmp(ms->typecode_list[index], t[index]) != 0) {
+            return false;
+        }
+    }
+    return true;
 }
 
 static node *init_dict(method_state *ms);
