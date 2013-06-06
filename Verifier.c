@@ -98,8 +98,6 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
         case OP_aload:
             safe_push(curr_ms, m, "A");
         }
-
-
     }
 
     /* Verification rules that need to be implemented:
