@@ -188,36 +188,43 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
 
         switch(op.op) {
             case OP_istore:
-                safe_store_local(curr_ms, m, "I", (uint8_t)m->code[++p]);
+                safe_store_local(calc_ms, m, "I", (uint8_t)m->code[p+1]);
+                break;
             case OP_fstore:
-                safe_store_local(curr_ms, m, "F", (uint8_t)m->code[++p]);
+                safe_store_local(calc_ms, m, "F", (uint8_t)m->code[p+1]);
+                break;
             case OP_lstore:
-                safe_store_local(curr_ms, m, "Ll", (uint8_t)m->code[++p]);
+                safe_store_local(calc_ms, m, "Ll", (uint8_t)m->code[p+1]);
+                break;
             case OP_dstore:
-                safe_store_local(curr_ms, m, "Dd", (uint8_t)m->code[++p]);
+                safe_store_local(calc_ms, m, "Dd", (uint8_t)m->code[p+1]);
+                break;
             case OP_astore:
-                
-                safe_store_local(curr_ms, m, "A", (uint8_t)m->code[++p]);
+                safe_store_local(calc_ms, m, "A", (uint8_t)m->code[p+1]);
+                break;
             case OP_istore_0: 
             case OP_istore_1:
             case OP_istore_2:
             case OP_istore_3:
-                safe_store_local(curr_ms, m, "I", op.opcodeName[strlen(op.opcodeName)-1] - '0');
+                safe_store_local(calc_ms, m, "I", op.opcodeName[strlen(op.opcodeName)-1] - '0');
+                break;
             case OP_fstore_0: 
             case OP_fstore_1:
             case OP_fstore_2:
             case OP_fstore_3:
-                safe_store_local(curr_ms, m, "F", op.opcodeName[strlen(op.opcodeName)-1] - '0');
+                safe_store_local(calc_ms, m, "F", op.opcodeName[strlen(op.opcodeName)-1] - '0');
+                break;
             case OP_lstore_0: 
             case OP_lstore_1:
             case OP_lstore_2:
             case OP_lstore_3:
-                safe_store_local(curr_ms, m, "Ll", op.opcodeName[strlen(op.opcodeName)-1] - '0');
+                safe_store_local(calc_ms, m, "Ll", op.opcodeName[strlen(op.opcodeName)-1] - '0');
+                break;
             case OP_dstore_0: 
             case OP_dstore_1:
             case OP_dstore_2:
             case OP_dstore_3:
-                safe_store_local(curr_ms, m, "Dd", op.opcodeName[strlen(op.opcodeName)-1] - '0');
+                safe_store_local(calc_ms, m, "Dd", op.opcodeName[strlen(op.opcodeName)-1] - '0');
         }
 
         short branch_off;
