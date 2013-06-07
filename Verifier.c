@@ -232,8 +232,6 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
                 default:
                     str[0] = sig[i];
                     str[1] = '\0';
-                    // str = (char*)malloc(1);
-                    // str = strncpy(str, sig + i, 1);
                     pop_die(ms, mi, str);
                     break;
             }
@@ -243,9 +241,6 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
                 default:
                     str[0] = sig[i];
                     str[1] = '\0';
-                    
-                    // str = (char*)malloc(1);
-                    // str = strncpy(str, sig + i, 1);
                     push_die(ms, mi, str);
                     break;
             }
