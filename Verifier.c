@@ -51,8 +51,10 @@ static bool safe_pop(method_state *ms, method_info *mi, char* val) {
         return false;
     char* pop = ms->typecode_list[mi->max_locals+ms->stack_height];
     ms->typecode_list[mi->max_locals+ms->stack_height] = "-";
-    if(strcmp(val, pop) == 0 || strcmp(val, "X") == 0)
+    if(strcmp(val, pop) == 0 || strcmp(val, "X") == 0) {
+        free(pop);
         return true;
+    }
     return false;
 }
 
@@ -249,7 +251,6 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
             }
             else {
                 insert_method_state(D,create_method_state(p+branch_off, 1, calc_ms->stack_height, deep_stack_copy(calc_ms->typecode_list, numSlots)));
-                free(calc_ms);
             }
         }
         if((ms = get_method_state(D,p+next_op_offset(op)))) {
@@ -260,8 +261,8 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
         }
         else if(!is_return(op.opcodeName)){
             insert_method_state(D,create_method_state(p+next_op_offset(op),1,calc_ms->stack_height,deep_stack_copy(calc_ms->typecode_list, numSlots)));
-            free(calc_ms);
         }
+        free(calc_ms);
     }
 
     /* Verification rules that need to be implemented:
@@ -286,7 +287,7 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
     char* sig = op.signature;
     bool isPopping = true;
     int i;
-    char str[2];
+    char* str = malloc(sizeof(char));
     if (tracingExecution & TRACE_VERIFY)
         printf("Parsing Opcode %s Signature: %s\n", op.opcodeName, sig);
     
