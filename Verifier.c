@@ -125,7 +125,7 @@ static short branch_offset(method_info *mi, OpcodeDescription op, uint32_t p) {
     if(strcmp(op.inlineOperands,"bb") == 0) {
         uint8_t b1 = mi->code[p+1];
         uint8_t b2 = mi->code[p+2];
-        return (b1 << 8 + b2);
+        return ((b1 << 8) + b2);
     }
     else if(strcmp(op.inlineOperands,"bbbb") == 0) {
         uint8_t b1 = mi->code[p+1];
@@ -135,6 +135,21 @@ static short branch_offset(method_info *mi, OpcodeDescription op, uint32_t p) {
         return (b1 << 24 + b2 << 16 + b3 << 8 + b4);
     }
     return NULL;
+}
+
+static char **deep_stack_copy(char** typecode_list) {
+    char** t = malloc(strlen(typecode_list)*sizeof(char*));
+    memcpy(t, typecode_list, strlen(typecode_list)+1);
+    return t;
+}
+
+static method_state *method_state_copy(method_state *ms) {
+    method_state *msc = malloc(sizeof(method_state));
+    msc->bytecode_position = ms->bytecode_position;
+    msc->change_bit = ms->change_bit;
+    msc->stack_height = ms->stack_height;
+    msc->typecode_list = deep_stack_copy(ms->typecode_list);
+    return msc;
 }
 
 static node *init_dict(method_state *ms);
@@ -162,34 +177,37 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
                 printTypeCodesArray(curr_ms->typecode_list, m, name);
         
         curr_ms->change_bit = 0;
-        uint32_t p = curr_ms->bytecode_position;
-        char** t   = curr_ms->typecode_list;
+        method_state *calc_ms = method_state_copy(curr_ms);
+        uint32_t p = calc_ms->bytecode_position;
         uint8_t opcode = m->code[p];
+        printf("At position: %i\n", p);
 
         OpcodeDescription op = opcodes[opcode]; 
-        ParseOpSignature(op, curr_ms, m); 
+        ParseOpSignature(op, calc_ms, m);
 
         short branch_off;
         method_state *ms;
-        if((branch_off = branch_offset(m,op,p)) != NULL) {
+        if((branch_off = branch_offset(m,op,p))) {
             if((ms = get_method_state(D,p+branch_off)) != NULL) {
-                if(!merge(ms, numSlots, curr_ms->stack_height, t)) {
+                if(!merge(ms, numSlots, calc_ms->stack_height, calc_ms->typecode_list)) {
                     printf("Path merge failed");
                     exit(0);
                 }
             }
             else {
-                insert_method_state(D,create_method_state(p+branch_off, 1, curr_ms->stack_height, t));
+                insert_method_state(D,create_method_state(p+branch_off, 1, calc_ms->stack_height, deep_stack_copy(calc_ms->typecode_list)));
+                free(calc_ms);
             }
         }
-        if((ms = get_method_state(D,p+next_op_offset(op)) != NULL)) {
-            if(!merge(ms, numSlots, curr_ms->stack_height, t)) {
+        if((ms = get_method_state(D,p+next_op_offset(op)))) {
+            if(!merge(ms, numSlots, calc_ms->stack_height, calc_ms->typecode_list)) {
                 printf("Path merge failed");
                 exit(0);
             }
         }
         else if(!is_return(op.opcodeName)){
-            insert_method_state(D,create_method_state(p+next_op_offset(op),1,curr_ms->stack_height,t));
+            insert_method_state(D,create_method_state(p+next_op_offset(op),1,calc_ms->stack_height,deep_stack_copy(calc_ms->typecode_list)));
+            free(calc_ms);
         }
     }
 
@@ -283,8 +301,10 @@ static node *init_dict(method_state *ms) {
 static method_state *get_method_state(node *root, uint32_t position) {
   node *np;
   for(np = root; np != NULL; np = np->next) {
-    if(np->ms != NULL && np->ms->bytecode_position == position)
-        return np->ms;
+    if(np->ms != NULL && np->ms->bytecode_position == position) {
+        method_state *msp = np->ms;
+        return msp;
+    }
   }
   return NULL;
 }
