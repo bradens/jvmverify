@@ -43,14 +43,14 @@ static bool safe_push(method_state *ms, method_info *mi, char* val) {
 }
 
 static bool safe_pop(method_state *ms, method_info *mi, char* val) {
-    printf("%s\n", val);
-    if (strcmp(val, "*") == 0 && strcmp(ms->typecode_list[mi->max_locals+ms->stack_height+1], "*") != 0) {
+    if (strcmp(val, "*") == 0 && strcmp(ms->typecode_list[mi->max_locals+ms->stack_height], "*") != 0) {
         return true;
     }
     ms->stack_height--;
     if(ms->stack_height < 0 || ms->stack_height > mi->max_stack)
         return false;
     char* pop = ms->typecode_list[mi->max_locals+ms->stack_height];
+    ms->typecode_list[mi->max_locals+ms->stack_height] = "-";
     if(strcmp(val, pop) == 0 || strcmp(val, "X") == 0)
         return true;
     return false;
@@ -147,25 +147,20 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
     // retType describes the result type of this method
     char **initState = MapSigToInitState(cf, m, &retType);
 
-    if (tracingExecution & TRACE_VERIFY)
-    	printTypeCodesArray(initState, m, name);
-
     node *D = init_dict(create_method_state(0,1,0,initState));
     method_state *curr_ms;
 
     while ((curr_ms = find_set_change_bit(D)) != NULL) {
+        if (tracingExecution & TRACE_VERIFY)
+                printTypeCodesArray(curr_ms->typecode_list, m, name);
+        
         curr_ms->change_bit = 0;
         uint32_t p = curr_ms->bytecode_position;
         char** t   = curr_ms->typecode_list;
         uint8_t opcode = m->code[p];
 
         OpcodeDescription op = opcodes[opcode]; 
-        ParseOpSignature(op, curr_ms, m);
-
-        // if (strcmp(op.inlineOperands, "") != 0) {
-        //     // There are inline operands.  Check their indices
-            
-        // }   
+        ParseOpSignature(op, curr_ms, m); 
 
         short branch_off;
         method_state *ms;
