@@ -69,6 +69,13 @@ static bool is_reference(char* type) {
     return lenstr < lenpre ? false : strncmp("A", type, lenpre) == 0;
 }
 
+static bool is_return(char* type) {
+    if(strcmp(type,"return") == 0 || strcmp(type,"ireturn") == 0 || strcmp(type,"lreturn") == 0 || strcmp(type,"freturn") == 0 || 
+        strcmp(type,"dreturn") == 0 || strcmp(type,"areturn") == 0 )
+        return true;
+    return false;
+}
+
 static bool merge(method_state *ms, int numSlots, uint32_t h, char** t) {
     int index = 0;
     if(ms->stack_height != h)
@@ -181,7 +188,7 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
                 exit(0);
             }
         }
-        else {
+        else if(!is_return(op.opcodeName)){
             insert_method_state(D,create_method_state(p+next_op_offset(op),1,curr_ms->stack_height,t));
         }
     }
