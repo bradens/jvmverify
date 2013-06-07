@@ -16,7 +16,7 @@
 typedef struct {
   uint32_t  bytecode_position;
   uint8_t   change_bit;
-  uint16_t  stack_height;
+  int16_t  stack_height;
   char      **typecode_list;
 } method_state;
 
@@ -24,7 +24,7 @@ typedef struct node{
 	method_state *ms;
 	struct node  *next;
 } node;
-
+char* safe_load_local(method_state*, method_info*, uint8_t);
 bool safe_store_local(method_state*, method_info*, char*, uint8_t);
 void push_die(method_state*, method_info*, char*);
 void pop_die(method_state*, method_info*, char*);

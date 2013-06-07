@@ -184,7 +184,7 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
         uint32_t p = calc_ms->bytecode_position;
         uint8_t opcode = m->code[p];
         OpcodeDescription op = opcodes[opcode]; 
-        ParseOpSignature(op, calc_ms, m);
+//        ParseOpSignature(op, calc_ms, m);
         
         int b1;
         int b2;
@@ -192,13 +192,65 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
         char* fieldTypeCode;
         
         switch(op.op) {
-            case OP_getfield: 
-                // get the 2byte index 
+            case OP_iload:
+            case OP_dload:
+            case OP_lload:
+            case OP_fload:
+            case OP_aload: 
+                b1 = m->code[p+1];
+                fieldTypeCode = safe_load_local(calc_ms, m, (uint8_t)m->code[p+1]);
+                push_die(calc_ms, m, fieldTypeCode);
+                break;
+            case OP_iload_0:
+            case OP_dload_0:
+            case OP_lload_0:
+            case OP_fload_0:
+            case OP_aload_0:
+                fieldTypeCode = safe_load_local(calc_ms, m, 0);
+                push_die(calc_ms, m, fieldTypeCode);
+                break;
+            case OP_iload_1:
+            case OP_dload_1:
+            case OP_lload_1:
+            case OP_fload_1:
+            case OP_aload_1:
+                fieldTypeCode = safe_load_local(calc_ms, m, 1);
+                push_die(calc_ms, m, fieldTypeCode);
+                break;
+            case OP_getstatic: 
                 b1 = m->code[p+1];
                 b2 = m->code[p+2];
                 b3 = (b1 << 8) + b2;
                 fieldTypeCode = FieldTypeCode(cf, b3);
                 push_die(calc_ms, m, fieldTypeCode);
+                break;
+            case OP_putstatic: 
+                b1 = m->code[p+1];
+                b2 = m->code[p+2];
+                b3 = (b1 << 8) + b2;
+                fieldTypeCode = FieldTypeCode(cf, b3);
+                pop_die(calc_ms, m, fieldTypeCode);
+                break;
+            case OP_getfield: 
+                b1 = m->code[p+1];
+                b2 = m->code[p+2];
+                b3 = (b1 << 8) + b2;
+                fieldTypeCode = FieldTypeCode(cf, b3);
+                // Pop off the classname that has the field
+                pop_die(calc_ms, m, cf->cname);
+                // Push on the field type
+                push_die(calc_ms, m, fieldTypeCode);
+                break;
+            case OP_putfield:
+                b1 = m->code[p+1];
+                b2 = m->code[p+2];
+                b3 = (b1 << 8) + b2;
+                fieldTypeCode = FieldTypeCode(cf, b3);
+                // Pop off the field Type
+                pop_die(calc_ms, m, fieldTypeCode);
+                // Pop off the classname that has the field
+                pop_die(calc_ms, m, cf->cname);
+                break;
             case OP_istore:
                 safe_store_local(calc_ms, m, "I", (uint8_t)m->code[p+1]);
                 break;
@@ -238,6 +290,22 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
             case OP_dstore_3:
                 safe_store_local(calc_ms, m, "Dd", op.opcodeName[strlen(op.opcodeName)-1] - '0');
                 break;
+            case OP_iconst_5:
+                push_die(calc_ms, m, "I");
+                break;
+            case OP_invokespecial:
+                b1 = m->code[p+1];
+                b2 = m->code[p+2];
+                b3 = (b1 << 8) + b2;
+                char* alcname = (char*)malloc((sizeof(char)*strlen(cf->cname)) + 2);
+                alcname[0] = 'A';
+                alcname[1] = 'L';
+                strncpy(alcname+2, cf->cname, strlen(cf->cname));
+                if (calc_ms->stack_height != 0)
+                        pop_die(calc_ms, m, alcname);
+                // TODO @bradens handle the stars
+                break;
+            
         }
 
         short branch_off;
@@ -316,10 +384,24 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
     }
 }
 
+char* safe_load_local(method_state* ms, method_info* mi, uint8_t position) {
+    if (position > mi->max_locals-1) {
+        printf("Incorrect variable index in local load.\n");
+        exit(0);
+    }
+    if (ms->typecode_list[position] == NULL ||
+        strcmp(ms->typecode_list[position], "U") == 0 || 
+        strcmp(ms->typecode_list[position], "-") == 0) {
+        printf("Bad local variable access.\n");
+        exit(0);
+    }
+    return ms->typecode_list[position];
+}
+
 // Store a type string to a local variable.
 bool safe_store_local(method_state* ms, method_info* mi, char* val, uint8_t position) {  
     if (position > mi->max_locals-1) {
-        printf("Incorrect variable index. Exiting\n");
+        printf("Incorrect variable index in local store. Exiting\n");
         exit(0);
     }
     // Compare the type in the local with the type that's being stored.

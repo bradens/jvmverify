@@ -6,12 +6,9 @@
  * Virtual Machines
  */
 public class Test {
-	public static int returnX() {
-		int x = 1;
-                if(x < 0) {
-                    int y = 0;
-                    x = 2;
-                }
-		return x + 309;
+        public int g = 5;
+	public int returnX() {
+		int x = g;
+		return x;
 	}
 }
