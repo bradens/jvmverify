@@ -8,6 +8,11 @@
 public class Test {
 	public static int returnX() {
 		int x = 1;
+                if(x > 0) {
+                    int y = 0;
+                    y = y + 1;
+                    x = 2;
+                }
 		return x + 309;
 	}
 }
