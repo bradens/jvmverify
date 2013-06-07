@@ -157,6 +157,7 @@ static method_state *create_method_state(uint32_t bytecode_position, uint8_t cha
 static method_state *find_set_change_bit(node *root);
 static method_state *get_method_state(node *root, uint32_t position);
 static void insert_method_state(node *root, method_state *ms);
+static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info* mi);
 
 
 // Verify the bytecode of one method m from class file cf
