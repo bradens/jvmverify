@@ -43,6 +43,9 @@ static bool safe_push(method_state *ms, method_info *mi, char* val) {
 }
 
 static bool safe_pop(method_state *ms, method_info *mi, char* val) {
+    if (strcmp(val, "*") == 0 && strcmp(ms->typecode_list[mi->max_locals+ms->stack_height+1], "*") != 0) {
+        return true;
+    }
     ms->stack_height--;
     if(ms->stack_height < 0)
         return false;
@@ -220,6 +223,16 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
                 case '>': 
                     isPopping = false;
                     break;
+                // case 'A': 
+                //     // the start of a class name
+                //     // need to parse till then pop it all off.
+                //     str = (char*)malloc(sizeof(sig) - i);
+                //     str = strncpy(str, sig + i, 1);
+                //     strpos = 1;
+                //     for (strpos = i+1;str[strpos] != '\0';strpos++;) {
+                        
+                //         i++;
+                //     }
                 default:
                     str = (char*)malloc(1);
                     str = strncpy(str, sig + i, 1);
@@ -238,6 +251,7 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
         }
     }
 }
+
 void push_die(method_state* ms, method_info* mi, char* val) {
     if (tracingExecution & TRACE_VERIFY)
         printf("pushing %s\n", val);
