@@ -134,7 +134,7 @@ static short branch_offset(method_info *mi, OpcodeDescription op, uint32_t p) {
         uint8_t b4 = mi->code[p+4];
         return (b1 << 24 + b2 << 16 + b3 << 8 + b4);
     }
-    return NULL;
+    return 0;
 }
 
 static node *init_dict(method_state *ms);
@@ -169,10 +169,43 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
         OpcodeDescription op = opcodes[opcode]; 
         ParseOpSignature(op, curr_ms, m); 
 
+        switch(op.op) {
+            case OP_istore:
+                safe_store_local(curr_ms, m, "I", (uint8_t)m->code[++p]);
+            case OP_fstore:
+                safe_store_local(curr_ms, m, "F", (uint8_t)m->code[++p]);
+            case OP_lstore:
+                safe_store_local(curr_ms, m, "Ll", (uint8_t)m->code[++p]);
+            case OP_dstore:
+                safe_store_local(curr_ms, m, "Dd", (uint8_t)m->code[++p]);
+            case OP_astore:
+                safe_store_local(curr_ms, m, "A", (uint8_t)m->code[++p]);
+            case OP_istore_0: 
+            case OP_istore_1:
+            case OP_istore_2:
+            case OP_istore_3:
+                safe_store_local(curr_ms, m, "I", op.opcodeName[strlen(op.opcodeName)-1] - '0');
+            case OP_fstore_0: 
+            case OP_fstore_1:
+            case OP_fstore_2:
+            case OP_fstore_3:
+                safe_store_local(curr_ms, m, "F", op.opcodeName[strlen(op.opcodeName)-1] - '0');
+            case OP_lstore_0: 
+            case OP_lstore_1:
+            case OP_lstore_2:
+            case OP_lstore_3:
+                safe_store_local(curr_ms, m, "Ll", op.opcodeName[strlen(op.opcodeName)-1] - '0');
+            case OP_dstore_0: 
+            case OP_dstore_1:
+            case OP_dstore_2:
+            case OP_dstore_3:
+                safe_store_local(curr_ms, m, "Dd", op.opcodeName[strlen(op.opcodeName)-1] - '0');
+        }
+
         short branch_off;
         method_state *ms;
-        if((branch_off = branch_offset(m,op,p)) != NULL) {
-            if((ms = get_method_state(D,p+branch_off)) != NULL) {
+        if((branch_off = branch_offset(m,op,p)) != 0) {
+            if((ms = get_method_state(D,p+branch_off)) != 0) {
                 if(!merge(ms, numSlots, curr_ms->stack_height, t)) {
                     printf("Path merge failed");
                     exit(0);
@@ -220,7 +253,6 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
         printf("Parsing Opcode %s Signature: %s\n", op.opcodeName, sig);
     
     for (i = 0;i < strlen(sig);i++) {
-        printf("%c\n", sig[i]);
         if (isPopping){
             switch(sig[i]) {
                 case '>': 
@@ -254,6 +286,19 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
         }
     }
 }
+
+// Store a type string to a local variable.
+bool safe_store_local(method_state* ms, method_info* mi, char* val, uint8_t position) {  
+    if (position > mi->max_locals-1) {
+        return false;
+    }
+    // Compare the type in the local with the type that's being stored.
+    if (strcmp(ms->typecode_list[position], val) == 0 || strcmp(ms->typecode_list[position], "U") == 0) {
+        ms->typecode_list[position] = val;
+        return true;
+    }
+    return false;
+}   
 
 void push_die(method_state* ms, method_info* mi, char* val) {
     if (tracingExecution & TRACE_VERIFY)

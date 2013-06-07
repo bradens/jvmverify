@@ -24,6 +24,7 @@ typedef struct {
 	struct node  *next;
 } node;
 
+bool safe_store_local(method_state*, method_info*, char*, uint8_t);
 void push_die(method_state*, method_info*, char*);
 void pop_die(method_state*, method_info*, char*);
 static void ParseOpSignature(OpcodeDescription op, method_state*, method_info*);
