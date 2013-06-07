@@ -11,6 +11,7 @@
 
 #include "ClassFileFormat.h"  // for ClassFile
 #include "OpcodeSignatures.h"
+#include <stdbool.h> 
 
 typedef struct {
   uint32_t  bytecode_position;
