@@ -43,6 +43,7 @@ static bool safe_push(method_state *ms, method_info *mi, char* val) {
 }
 
 static bool safe_pop(method_state *ms, method_info *mi, char* val) {
+    printf("%s\n", val);
     if (strcmp(val, "*") == 0 && strcmp(ms->typecode_list[mi->max_locals+ms->stack_height+1], "*") != 0) {
         return true;
     }
@@ -212,29 +213,32 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
     char* sig = op.signature;
     bool isPopping = true;
     int i;
-    char* str;
+    char str[2];
     if (tracingExecution & TRACE_VERIFY)
         printf("Parsing Opcode %s Signature: %s\n", op.opcodeName, sig);
     
     for (i = 0;i < strlen(sig);i++) {
+        printf("%c\n", sig[i]);
         if (isPopping){
             switch(sig[i]) {
                 case '>': 
                     isPopping = false;
                     break;
-                case 'A': 
-                    // the start of a class name
-                    // need to parse till then pop it all off.
-                    str = (char*)malloc(sizeof(sig) - i);
-                    str = strncpy(str, sig + i, 1);
-                    strpos = 1;
-                    for (strpos = i+1;str[strpos] != '\0';strpos++;) {
+                // case 'A': 
+                //     // the start of a class name
+                //     // need to parse till then pop it all off.
+                //     str = (char*)malloc(sizeof(sig) - i);
+                //     str = strncpy(str, sig + i, 1);
+                //     strpos = 1;
+                //     for (strpos = i+1;str[strpos] != '\0';strpos++;) {
                         
-                        i++;
-                    }
+                //         i++;
+                //     }
                 default:
-                    str = (char*)malloc(1);
-                    str = strncpy(str, sig + i, 1);
+                    str[0] = sig[i];
+                    str[1] = '\0';
+                    // str = (char*)malloc(1);
+                    // str = strncpy(str, sig + i, 1);
                     pop_die(ms, mi, str);
                     break;
             }
@@ -242,8 +246,11 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
         else {
             switch(sig[i]) {
                 default:
-                    str = (char*)malloc(1);
-                    str = strncpy(str, sig + i, 1);
+                    str[0] = sig[i];
+                    str[1] = '\0';
+                    
+                    // str = (char*)malloc(1);
+                    // str = strncpy(str, sig + i, 1);
                     push_die(ms, mi, str);
                     break;
             }
