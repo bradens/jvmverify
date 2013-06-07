@@ -181,12 +181,22 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
         method_state *calc_ms = method_state_copy(curr_ms, numSlots);
         uint32_t p = calc_ms->bytecode_position;
         uint8_t opcode = m->code[p];
-        printf("At position: %i\n", p);
-
         OpcodeDescription op = opcodes[opcode]; 
         ParseOpSignature(op, calc_ms, m);
-
+        
+        int b1;
+        int b2;
+        int b3;
+        char* fieldTypeCode;
+        
         switch(op.op) {
+            case OP_getfield: 
+                // get the 2byte index 
+                b1 = m->code[p+1];
+                b2 = m->code[p+2];
+                b3 = (b1 << 8) + b2;
+                fieldTypeCode = FieldTypeCode(cf, b3);
+                push_die(calc_ms, m, fieldTypeCode);
             case OP_istore:
                 safe_store_local(calc_ms, m, "I", (uint8_t)m->code[p+1]);
                 break;
@@ -225,6 +235,7 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
             case OP_dstore_2:
             case OP_dstore_3:
                 safe_store_local(calc_ms, m, "Dd", op.opcodeName[strlen(op.opcodeName)-1] - '0');
+                break;
         }
 
         short branch_off;
@@ -285,17 +296,6 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
                 case '>': 
                     isPopping = false;
                     break;
-                case 'A':
-                    printf("%s\n", sig); 
-                    // the start of a class name
-                    // need to parse till then pop it all off.
-                    // str = (char*)malloc(sizeof(sig) - i);
-                    // str = strncpy(str, sig + i, 1);
-                    // strpos = 1;
-                    // for (strpos = i+1;str[strpos] != '\0';strpos++;) {
-                        
-                    //     i++;
-                    // }
                 default:
                     str[0] = sig[i];
                     str[1] = '\0';
@@ -318,14 +318,16 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
 // Store a type string to a local variable.
 bool safe_store_local(method_state* ms, method_info* mi, char* val, uint8_t position) {  
     if (position > mi->max_locals-1) {
-        return false;
+        printf("Incorrect variable index. Exiting\n");
+        exit(0);
     }
     // Compare the type in the local with the type that's being stored.
     if (strcmp(ms->typecode_list[position], val) == 0 || strcmp(ms->typecode_list[position], "U") == 0) {
         ms->typecode_list[position] = val;
         return true;
     }
-    return false;
+    printf("Incorrect types being stored in variable %d.  Tried type %s, but was type %s\n", position, val, ms->typecode_list[position]);
+    exit(0);
 }   
 
 void push_die(method_state* ms, method_info* mi, char* val) {
