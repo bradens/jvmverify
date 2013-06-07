@@ -222,16 +222,16 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
                 case '>': 
                     isPopping = false;
                     break;
-                // case 'A': 
-                //     // the start of a class name
-                //     // need to parse till then pop it all off.
-                //     str = (char*)malloc(sizeof(sig) - i);
-                //     str = strncpy(str, sig + i, 1);
-                //     strpos = 1;
-                //     for (strpos = i+1;str[strpos] != '\0';strpos++;) {
+                case 'A': 
+                    // the start of a class name
+                    // need to parse till then pop it all off.
+                    str = (char*)malloc(sizeof(sig) - i);
+                    str = strncpy(str, sig + i, 1);
+                    strpos = 1;
+                    for (strpos = i+1;str[strpos] != '\0';strpos++;) {
                         
-                //         i++;
-                //     }
+                        i++;
+                    }
                 default:
                     str = (char*)malloc(1);
                     str = strncpy(str, sig + i, 1);
