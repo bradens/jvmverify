@@ -195,8 +195,9 @@ static void verifyMethod( ClassFile *cf, method_info *m ) {
                 safe_store_local(curr_ms, m, "Ll", (uint8_t)m->code[++p]);
             case OP_dstore:
                 safe_store_local(curr_ms, m, "Dd", (uint8_t)m->code[++p]);
-            // case OP_astore:
-            //     safe_store_local(curr_ms, m, "A", (uint8_t)m->code[++p]);
+            case OP_astore:
+                
+                safe_store_local(curr_ms, m, "A", (uint8_t)m->code[++p]);
             case OP_istore_0: 
             case OP_istore_1:
             case OP_istore_2:
@@ -277,16 +278,17 @@ static void ParseOpSignature(OpcodeDescription op, method_state* ms, method_info
                 case '>': 
                     isPopping = false;
                     break;
-                // case 'A': 
-                //     // the start of a class name
-                //     // need to parse till then pop it all off.
-                //     str = (char*)malloc(sizeof(sig) - i);
-                //     str = strncpy(str, sig + i, 1);
-                //     strpos = 1;
-                //     for (strpos = i+1;str[strpos] != '\0';strpos++;) {
+                case 'A':
+                    printf("%s\n", sig); 
+                    // the start of a class name
+                    // need to parse till then pop it all off.
+                    // str = (char*)malloc(sizeof(sig) - i);
+                    // str = strncpy(str, sig + i, 1);
+                    // strpos = 1;
+                    // for (strpos = i+1;str[strpos] != '\0';strpos++;) {
                         
-                //         i++;
-                //     }
+                    //     i++;
+                    // }
                 default:
                     str[0] = sig[i];
                     str[1] = '\0';
